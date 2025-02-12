@@ -1,60 +1,82 @@
 <template>
-  <div class="container">
-    <h2 class="text-center">Agendar Banho & Tosa</h2>
-
-    <form @submit.prevent="agendar">
-      <!-- Selecionar Tutor -->
-      <div class="mb-3">
-        <label class="form-label">Tutor</label>
-        <select v-model="tutorSelecionado" @change="filtrarAnimais" class="form-select">
-          <option value="" disabled>Selecione um tutor</option>
-          <option v-for="tutor in tutores" :key="tutor.id" :value="tutor.id">
-            {{ tutor.nome }}
-          </option>
-        </select>
+  <div class="container mt-4">
+    <div class="card shadow">
+      <div class="card-header text-center bg-primary text-white">
+        <h2>Agendar Banho & Tosa</h2>
       </div>
+      
+      <div class="card-body">
+        <form @submit.prevent="agendar">
+          <div class="row">
+            <!-- Selecionar Tutor -->
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Tutor: </label>
+                <select v-model="tutorSelecionado" @change="filtrarAnimais" class="form-control">
+                  <option value="" disabled>Selecione um tutor: </option>
+                  <option v-for="tutor in tutores" :key="tutor.id" :value="tutor.id">
+                    {{ tutor.nome }}
+                  </option>
+                </select>
+              </div>
+            </div>
 
-      <!-- Selecionar Animal -->
-      <div class="mb-3">
-        <label class="form-label">Animal</label>
-        <select v-model="animalSelecionado" class="form-select" :disabled="animaisFiltrados.length === 0">
-          <option value="" disabled>Selecione um pet</option>
-          <option v-for="animal in animaisFiltrados" :key="animal.id" :value="animal.id">
-            {{ animal.nome }}
-          </option>
-        </select>
+            <!-- Selecionar Animal -->
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Animal: </label>
+                <select v-model="animalSelecionado" class="form-control" :disabled="animaisFiltrados.length === 0">
+                  <option value="" disabled>Selecione um Animal</option>
+                  <option v-for="animal in animaisFiltrados" :key="animal.id" :value="animal.id">
+                    {{ animal.nome }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Selecionar Serviço -->
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Serviço Disponível: </label>
+                <select v-model="servicoSelecionado" class="form-control">
+                  <option value="" disabled>Selecione um serviço:</option>
+                  <option v-for="servico in servicos" :key="servico.id" :value="servico.id">
+                    {{ servico.nome }} - R$ {{ servico.preco }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Selecionar Data -->
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Data do Agendamento</label>
+                <input type="date" v-model="dataSelecionada" class="form-control" :min="hoje" @change="gerarHorarios">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Selecionar Hora -->
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Hora</label>
+                <select v-model="horarioSelecionado" class="form-control">
+                  <option value="" disabled>Selecione um horário</option>
+                  <option v-for="horario in horariosDisponiveis" :key="horario">
+                    {{ horario }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Agendar</button>
+        </form>
       </div>
-
-      <!-- Selecionar Serviço -->
-      <div class="mb-3">
-        <label class="form-label">Serviço</label>
-        <select v-model="servicoSelecionado" class="form-select">
-          <option value="" disabled>Selecione um serviço</option>
-          <option v-for="servico in servicos" :key="servico.id" :value="servico.id">
-            {{ servico.nome }} - R$ {{ servico.preco }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Selecionar Data -->
-      <div class="mb-3">
-        <label class="form-label">Data</label>
-        <input type="date" v-model="dataSelecionada" class="form-control" :min="hoje" @change="gerarHorarios">
-      </div>
-
-      <!-- Selecionar Hora -->
-      <div class="mb-3">
-        <label class="form-label">Hora</label>
-        <select v-model="horarioSelecionado" class="form-select">
-          <option value="" disabled>Selecione um horário</option>
-          <option v-for="horario in horariosDisponiveis" :key="horario">
-            {{ horario }}
-          </option>
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100">Agendar</button>
-    </form>
+    </div>
   </div>
 </template>
 
@@ -150,28 +172,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #e3f2fd;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.btn-primary {
-  background-color: #64b5f6;
-  border: none;
-}
-
-.btn-primary:hover {
-  background-color: #42a5f5;
-}
-</style>
