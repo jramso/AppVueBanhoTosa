@@ -1,4 +1,4 @@
-# uau_dog
+# Vue Banho e Tosa  - UAU Dog
 
 ## Project setup
 ```
