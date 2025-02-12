@@ -77,11 +77,47 @@
         </form>
       </div>
     </div>
+
+    <!-- LISTA DE AGENDAMENTOS -->
+    <div class="card shadow mt-4">
+      <div class="card-header bg-secondary text-white text-center">
+        <h3>Meus Agendamentos</h3>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Tutor</th>
+              <th>Animal</th>
+              <th>Serviço</th>
+              <th>Data</th>
+              <th>Hora</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="agendamento in agendamentos" :key="agendamento.id">
+              <td>{{ getTutorNome(agendamento.tutorId) }}</td>
+              <td>{{ getAnimalNome(agendamento.animalId) }}</td>
+              <td>{{ getServicoNome(agendamento.servicoId) }}</td>
+              <td>{{ formatarData(agendamento.dataHora) }}</td>
+              <td>{{ formatarHora(agendamento.dataHora) }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" @click="cancelarAgendamento(agendamento.id)">
+                  🗑️ Cancelar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="agendamentos.length === 0" class="text-center text-muted">Nenhum agendamento encontrado.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   data() {
@@ -89,6 +125,7 @@ export default {
       tutores: [],
       animais: [],
       servicos: [],
+      agendamentos: [],
       tutorSelecionado: "",
       animalSelecionado: "",
       servicoSelecionado: "",
@@ -103,7 +140,6 @@ export default {
       return new Date().toISOString().split("T")[0]; // Data mínima (hoje)
     },
 
-    // Filtra os animais pelo tutor selecionado
     animaisFiltrados() {
       return this.animais.filter(animal => animal.tutorId === this.tutorSelecionado);
     }
@@ -112,24 +148,21 @@ export default {
   methods: {
     async carregarDados() {
       try {
-        // Busca tutores
         const { data: tutores } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Tutor");
-        this.tutores = tutores;
-
-        // Busca animais
         const { data: animais } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Animal");
-        this.animais = animais;
-
-        // Busca serviços
         const { data: servicos } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Servico");
+        const { data: agendamentos } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/api/Agendamento");
+
+        this.tutores = tutores;
+        this.animais = animais;
         this.servicos = servicos;
+        this.agendamentos = agendamentos;
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         alert("Erro ao carregar os dados!");
       }
     },
 
-    // Gera os horários disponíveis (08:00 às 18:00 de 1 em 1 hora)
     gerarHorarios() {
       this.horariosDisponiveis = [];
       for (let hora = 8; hora <= 18; hora++) {
@@ -137,12 +170,6 @@ export default {
       }
     },
 
-    // Filtra os animais do tutor selecionado
-    filtrarAnimais() {
-      this.animalSelecionado = "";
-    },
-
-    // Função para agendar um novo serviço
     async agendar() {
       if (!this.tutorSelecionado || !this.animalSelecionado || !this.servicoSelecionado || !this.dataSelecionada || !this.horarioSelecionado) {
         alert("Preencha todos os campos!");
@@ -156,14 +183,40 @@ export default {
         servicoId: this.servicoSelecionado,
       };
 
-      console.log("Dados do agendamento:", novoAgendamento); // 🔍 Verificar os valores antes de enviar
       try {
         await axios.post("https://agendamentobanhoetosa-2.onrender.com/api/Agendamento", novoAgendamento);
         alert("Agendamento realizado com sucesso!");
+        this.carregarDados();
       } catch (error) {
-        console.error("Erro ao agendar:", error);
         alert("Erro ao agendar, tente novamente.");
       }
+    },
+
+    async cancelarAgendamento(id) {
+      if (confirm("Deseja cancelar este agendamento?")) {
+        await axios.delete(`https://agendamentobanhoetosa-2.onrender.com/api/Agendamento/${id}`);
+        this.carregarDados();
+      }
+    },
+
+    getTutorNome(id) {
+      return this.tutores.find(tutor => tutor.id === id)?.nome || "-";
+    },
+
+    getAnimalNome(id) {
+      return this.animais.find(animal => animal.id === id)?.nome || "-";
+    },
+
+    getServicoNome(id) {
+      return this.servicos.find(servico => servico.id === id)?.nome || "-";
+    },
+
+    formatarData(data) {
+      return data.split("T")[0];
+    },
+
+    formatarHora(data) {
+      return data.split("T")[1].substring(0, 5);
     }
   },
 

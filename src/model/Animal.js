@@ -3,7 +3,7 @@ export default class Animal {
       this.id = id;
       this.nome = nome;
       this.idade = idade;
-      this.idTutor = idTutor; // Relacionamento com Tutor
+      this.idTutor = idTutor;
       this.especie = especie; // Enum: 'Gato' ou 'Cachorro'
       this.raca = raca; // Subtipo do Enum (Ex: 'AkitaAmericano', 'Angora', etc.)
     }
