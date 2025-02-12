@@ -1,50 +1,54 @@
 <template>
-  <div class="container mt-4">
+  <div class="container">
     <h2 class="text-center">Agendar Banho & Tosa</h2>
 
     <form @submit.prevent="agendar">
-      <!-- Seleção do Tutor -->
+      <!-- Selecionar Tutor -->
       <div class="mb-3">
         <label class="form-label">Tutor</label>
-        <select v-model="agendamento.tutorId" class="form-select" @change="carregarAnimais">
+        <select v-model="tutorSelecionado" @change="filtrarAnimais" class="form-select">
+          <option value="" disabled>Selecione um tutor</option>
           <option v-for="tutor in tutores" :key="tutor.id" :value="tutor.id">
-            {{ tutor.nome }} - {{ tutor.telefone }}
+            {{ tutor.nome }}
           </option>
         </select>
       </div>
 
-      <!-- Seleção do Pet (Filtrando pelo Tutor) -->
+      <!-- Selecionar Animal -->
       <div class="mb-3">
-        <label class="form-label">Pet</label>
-        <select v-model="agendamento.animalId" class="form-select" :disabled="animaisFiltrados.length === 0">
+        <label class="form-label">Animal</label>
+        <select v-model="animalSelecionado" class="form-select" :disabled="animaisFiltrados.length === 0">
+          <option value="" disabled>Selecione um pet</option>
           <option v-for="animal in animaisFiltrados" :key="animal.id" :value="animal.id">
-            {{ animal.nome }} ({{ animal.tipo === 0 ? 'Gato' : 'Cachorro' }})
+            {{ animal.nome }}
           </option>
         </select>
       </div>
 
-      <!-- Seleção do Serviço -->
+      <!-- Selecionar Serviço -->
       <div class="mb-3">
         <label class="form-label">Serviço</label>
-        <select v-model="agendamento.servicoId" class="form-select">
+        <select v-model="servicoSelecionado" class="form-select">
+          <option value="" disabled>Selecione um serviço</option>
           <option v-for="servico in servicos" :key="servico.id" :value="servico.id">
             {{ servico.nome }} - R$ {{ servico.preco }}
           </option>
         </select>
       </div>
 
-      <!-- Escolha da Data -->
+      <!-- Selecionar Data -->
       <div class="mb-3">
         <label class="form-label">Data</label>
-        <input type="date" v-model="dataSelecionada" class="form-control" :min="dataMinima" required>
+        <input type="date" v-model="dataSelecionada" class="form-control" :min="hoje" @change="gerarHorarios">
       </div>
 
-      <!-- Escolha do Horário -->
+      <!-- Selecionar Hora -->
       <div class="mb-3">
         <label class="form-label">Hora</label>
         <select v-model="horarioSelecionado" class="form-select">
-          <option v-for="hora in horariosDisponiveis" :key="hora" :value="hora">
-            {{ hora }}
+          <option value="" disabled>Selecione um horário</option>
+          <option v-for="horario in horariosDisponiveis" :key="horario">
+            {{ horario }}
           </option>
         </select>
       </div>
@@ -55,10 +59,7 @@
 </template>
 
 <script>
-import AgendamentoController from '@/controller/AgendamentoController';
-import TutorController from '@/controller/TutorController';
-import AnimalController from '@/controller/AnimalController';
-import ServicoController from '@/controller/ServicoController';
+import axios from 'axios';
 
 export default {
   data() {
@@ -66,95 +67,86 @@ export default {
       tutores: [],
       animais: [],
       servicos: [],
-      agendamento: {
-        tutorId: null,
-        animalId: null,
-        servicoId: null,
-        dataHora: ''
-      },
-      dataSelecionada: '',
-      horarioSelecionado: '',
-      horariosDisponiveis: []
+      tutorSelecionado: "",
+      animalSelecionado: "",
+      servicoSelecionado: "",
+      dataSelecionada: "",
+      horarioSelecionado: "",
+      horariosDisponiveis: [],
     };
   },
+
   computed: {
-    dataMinima() {
-      const hoje = new Date();
-      return hoje.toISOString().split('T')[0]; // Data mínima = hoje
+    hoje() {
+      return new Date().toISOString().split("T")[0]; // Data mínima (hoje)
     },
+
+    // Filtra os animais pelo tutor selecionado
     animaisFiltrados() {
-      // Retorna apenas os animais do tutor selecionado
-      return this.animais.filter(animal => animal.tutorId === this.agendamento.tutorId);
+      return this.animais.filter(animal => animal.tutorId === this.tutorSelecionado);
     }
   },
-  watch: {
-    dataSelecionada() {
-      this.gerarHorariosDisponiveis();
-    }
-  },
+
   methods: {
-    async carregarTutores() {
+    async carregarDados() {
       try {
-        this.tutores = await TutorController.getAllTutores();
+        // Busca tutores
+        const { data: tutores } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Tutor");
+        this.tutores = tutores;
+
+        // Busca animais
+        const { data: animais } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Animal");
+        this.animais = animais;
+
+        // Busca serviços
+        const { data: servicos } = await axios.get("https://agendamentobanhoetosa-2.onrender.com/Servico");
+        this.servicos = servicos;
       } catch (error) {
-        console.error('Erro ao carregar tutores:', error);
+        console.error("Erro ao carregar dados:", error);
+        alert("Erro ao carregar os dados!");
       }
     },
-    async carregarAnimais() {
-      try {
-        this.animais = await AnimalController.getAllAnimais();
-      } catch (error) {
-        console.error('Erro ao carregar animais:', error);
-      }
-    },
-    async carregarServicos() {
-      try {
-        this.servicos = await ServicoController.getAllServicos();
-      } catch (error) {
-        console.error('Erro ao carregar serviços:', error);
-      }
-    },
-    gerarHorariosDisponiveis() {
+
+    // Gera os horários disponíveis (08:00 às 18:00 de 1 em 1 hora)
+    gerarHorarios() {
       this.horariosDisponiveis = [];
-      const horarios = [];
       for (let hora = 8; hora <= 18; hora++) {
-        horarios.push(`${hora.toString().padStart(2, '0')}:00`);
+        this.horariosDisponiveis.push(`${hora}:00`);
       }
-      this.horariosDisponiveis = horarios;
     },
+
+    // Filtra os animais do tutor selecionado
+    filtrarAnimais() {
+      this.animalSelecionado = "";
+    },
+
+    // Função para agendar um novo serviço
     async agendar() {
-      if (!this.agendamento.tutorId || !this.agendamento.animalId || !this.agendamento.servicoId || !this.dataSelecionada || !this.horarioSelecionado) {
-        alert('Preencha todos os campos!');
+      if (!this.tutorSelecionado || !this.animalSelecionado || !this.servicoSelecionado || !this.dataSelecionada || !this.horarioSelecionado) {
+        alert("Preencha todos os campos!");
         return;
       }
 
-      this.agendamento.dataHora = `${this.dataSelecionada}T${this.horarioSelecionado}:00Z`;
-
-      try {
-        await AgendamentoController.criarAgendamento(this.agendamento);
-        alert('Agendamento realizado com sucesso!');
-        this.resetForm();
-      } catch (error) {
-        alert('Erro ao agendar, tente novamente.');
-        console.error('Erro:', error);
-      }
-    },
-    resetForm() {
-      this.agendamento = {
-        tutorId: null,
-        animalId: null,
-        servicoId: null,
-        dataHora: ''
+      const novoAgendamento = {
+        dataHora: `${this.dataSelecionada}T${this.horarioSelecionado}:00.000Z`,
+        tutorId: this.tutorSelecionado,
+        animalId: this.animalSelecionado,
+        servicoId: this.servicoSelecionado,
       };
-      this.dataSelecionada = '';
-      this.horarioSelecionado = '';
+
+      console.log("Dados do agendamento:", novoAgendamento); // 🔍 Verificar os valores antes de enviar
+      try {
+        await axios.post("https://agendamentobanhoetosa-2.onrender.com/api/Agendamento", novoAgendamento);
+        alert("Agendamento realizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao agendar:", error);
+        alert("Erro ao agendar, tente novamente.");
+      }
     }
   },
-  async created() {
-    await this.carregarTutores();
-    await this.carregarAnimais();
-    await this.carregarServicos();
-    this.gerarHorariosDisponiveis();
+
+  mounted() {
+    this.carregarDados();
   }
 };
 </script>
@@ -164,7 +156,7 @@ export default {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
-  background: #f8f9fa;
+  background: #e3f2fd;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -175,11 +167,11 @@ h2 {
 }
 
 .btn-primary {
-  background-color: #007bff;
+  background-color: #64b5f6;
   border: none;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #42a5f5;
 }
 </style>

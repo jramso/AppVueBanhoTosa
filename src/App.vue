@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import AgendamentoForm from './components/AgendamentoForm.vue';
+import AgendamentoForm from './components/Agendamento/AgendamentoForm.vue';
 //import TutoresModel from './components/TutoresModel.vue'
 
 export default {
