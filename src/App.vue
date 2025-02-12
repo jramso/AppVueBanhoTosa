@@ -10,7 +10,7 @@
           <ul class="navbar-nav">
             <li class="nav-item"><router-link class="nav-link" to="/agendamento">Agendamento</router-link></li>
             <li class="nav-item"><router-link class="nav-link" to="/animais">Animais</router-link></li>
-            <!-- <li class="nav-item"><router-link class="nav-link" to="/servicos">Serviços</router-link></li> -->
+            <li class="nav-item"><router-link class="nav-link" to="/servicos">Serviços</router-link></li>
             <li class="nav-item"><router-link class="nav-link" to="/tutores">Tutores</router-link></li>
           </ul>
         </div>
