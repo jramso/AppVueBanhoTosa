@@ -6,7 +6,7 @@ export default {
   async cadastrarServico(servico) {
     try {
       const response = await axios.post(API_URL, {
-        nome: servico.nome,  // Ajustado para "nome"
+        nome: servico.nome, 
         preco: servico.preco
       });
       return response.data;
@@ -39,7 +39,7 @@ export default {
   async atualizarServico(id, servico) {
     try {
       const response = await axios.put(`${API_URL}/${id}`, {
-        nome: servico.nome,  // Ajustado para "nome"
+        nome: servico.nome, 
         preco: servico.preco
       });
       return response.data;

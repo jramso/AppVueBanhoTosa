@@ -5,7 +5,7 @@ export default class Animal {
       this.idade = idade;
       this.idTutor = idTutor;
       this.especie = especie; // Enum: 'Gato' ou 'Cachorro'
-      this.raca = raca; // Subtipo do Enum (Ex: 'AkitaAmericano', 'Angora', etc.)
+      this.raca = raca;
     }
   }
   
