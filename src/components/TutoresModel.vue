@@ -1,23 +1,13 @@
 <template>
   <v-container>
-    <v-alert
-      v-if="error"
-      type="error"
-      closable
-      class="mb-4"
-    >
+    <v-alert v-if="error" type="error" closable class="mb-4">
       {{ error }}
     </v-alert>
 
     <v-card>
       <v-card-title class="d-flex justify-space-between align-center">
         <span>Tutores</span>
-        <v-btn
-          color="primary"
-          @click="openDialog()"
-        >
-          Adicionar Tutor
-        </v-btn>
+        <v-btn color="primary" @click="openDialog()">Adicionar Tutor</v-btn>
       </v-card-title>
 
       <v-card-text>
@@ -36,19 +26,9 @@
               <td>{{ tutor.telefone }}</td>
               <td>{{ tutor.endereco }}</td>
               <td>
-                <v-btn
-                  icon="mdi-delete"
-                  size="small"
-                  color="error"
-                  @click="confirmarDelete(tutor)"
-                  class="mr-2"
-                />
-                <v-btn
-                  icon="mdi-eye"
-                  size="small"
-                  color="info"
-                  @click="verDetalhes(tutor)"
-                />
+                <v-btn icon="mdi-pencil" size="small" color="warning" @click="openDialog(tutor)" class="mr-2" />
+                <v-btn icon="mdi-delete" size="small" color="error" @click="confirmarDelete(tutor)" class="mr-2" />
+                <v-btn icon="mdi-eye" size="small" color="info" @click="verDetalhes(tutor)" />
               </td>
             </tr>
           </tbody>
@@ -56,33 +36,15 @@
       </v-card-text>
     </v-card>
 
-    <!-- Dialog para adicionar/editar tutor -->
+    <!-- Dialog de adicionar/editar -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
         <v-card-title>{{ formTitle }}</v-card-title>
         <v-card-text>
           <v-form ref="form" v-model="valid">
-            <v-text-field
-              v-model="editedItem.nome"
-              label="Nome"
-              :rules="[v => !!v || 'Nome é obrigatório']"
-              required
-            />
-            <v-text-field
-              v-model="editedItem.telefone"
-              label="Telefone"
-              :rules="[
-                v => !!v || 'Telefone é obrigatório',
-                v => /^\d{10,11}$/.test(v) || 'Telefone inválido'
-              ]"
-              required
-            />
-            <v-text-field
-              v-model="editedItem.endereco"
-              label="Endereço"
-              :rules="[v => !!v || 'Endereço é obrigatório']"
-              required
-            />
+            <v-text-field v-model="editedItem.nome" label="Nome" required />
+            <v-text-field v-model="editedItem.telefone" label="Telefone" required />
+            <v-text-field v-model="editedItem.endereco" label="Endereço" required />
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -93,14 +55,19 @@
       </v-card>
     </v-dialog>
 
-    <!-- Dialog de confirmação de exclusão -->
-    <v-dialog v-model="dialogDelete" max-width="500px">
+    <!-- Dialog de detalhes -->
+    <v-dialog v-model="dialogDetails" max-width="500px">
       <v-card>
-        <v-card-title>Tem certeza que deseja deletar este tutor?</v-card-title>
+        <v-card-title>Detalhes do Tutor</v-card-title>
+        <v-card-text>
+          <p><strong>ID:</strong> {{ selectedTutor.id }}</p>
+          <p><strong>Nome:</strong> {{ selectedTutor.nome }}</p>
+          <p><strong>Telefone:</strong> {{ selectedTutor.telefone }}</p>
+          <p><strong>Endereço:</strong> {{ selectedTutor.endereco }}</p>
+        </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="error" text @click="dialogDelete = false">Não</v-btn>
-          <v-btn color="primary" text @click="deleteItemConfirm">Sim</v-btn>
+          <v-btn color="primary" text @click="dialogDetails = false">Fechar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -108,55 +75,50 @@
 </template>
 
 <script>
-import tutorService from '@/services/tutor.service';
-import Tutor from '@/model/Tutor';
+import axios from 'axios';
 
 export default {
   name: 'TutoresModel',
-  
   data() {
     return {
       tutores: [],
       dialog: false,
-      dialogDelete: false,
+      dialogDetails: false,
       valid: true,
       error: null,
       editedIndex: -1,
-      editedItem: new Tutor(),
-      defaultItem: new Tutor(),
+      editedItem: { nome: '', telefone: '', endereco: '' }, 
+      selectedTutor: { id: null, nome: '', telefone: '', endereco: '' },
+      defaultItem: { nome: '', telefone: '', endereco: '' }, 
     };
   },
-
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? 'Novo Tutor' : 'Editar Tutor';
     },
   },
-
   mounted() {
     this.initialize();
   },
-
   methods: {
     async initialize() {
       try {
-        this.tutores = await tutorService.getAllTutores();
-        this.error = null;
+        const response = await axios.get('/Tutor');
+        this.tutores = response.data;
       } catch (error) {
         this.error = error.message;
       }
     },
-
     openDialog(item) {
-      this.editedIndex = -1;
-      this.editedItem = new Tutor();
       if (item) {
-        this.editedIndex = this.tutores.indexOf(item);
+        this.editedIndex = this.tutores.findIndex(t => t.id === item.id);
         this.editedItem = Object.assign({}, item);
+      } else {
+        this.editedIndex = -1;
+        this.editedItem = Object.assign({}, this.defaultItem);
       }
       this.dialog = true;
     },
-
     closeDialog() {
       this.dialog = false;
       this.$nextTick(() => {
@@ -164,50 +126,45 @@ export default {
         this.editedIndex = -1;
       });
     },
-
     async save() {
-      if (!this.$refs.form.validate()) return;
-
       try {
-        const tutor = await tutorService.addTutor(this.editedItem);
         if (this.editedIndex > -1) {
-          Object.assign(this.tutores[this.editedIndex], tutor);
+          await axios.put(`/Tutor/${this.editedItem.id}`, this.editedItem);
+          Object.assign(this.tutores[this.editedIndex], this.editedItem);
         } else {
-          this.tutores.push(tutor);
+          //Enviando apenas nome, telefone e endereço (sem ID)
+          const response = await axios.post('/Tutor', {
+            nome: this.editedItem.nome,
+            telefone: this.editedItem.telefone,
+            endereco: this.editedItem.endereco
+          });
+          this.tutores.push(response.data);
         }
         this.closeDialog();
         this.error = null;
       } catch (error) {
-        this.error = error.message;
+        this.error = error.response?.data?.message || "Erro ao salvar tutor.";
       }
     },
-
-    confirmarDelete(item) {
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
-    },
-
-    async deleteItemConfirm() {
-      try {
-        await tutorService.deleteTutor(this.editedItem.id);
-        const index = this.tutores.indexOf(this.editedItem);
-        this.tutores.splice(index, 1);
-        this.dialogDelete = false;
-        this.error = null;
-      } catch (error) {
-        this.error = error.message;
-      }
-    },
-
     async verDetalhes(item) {
       try {
-        const tutor = await tutorService.getTutorById(item.id);
-        // Aqui você pode implementar a lógica para mostrar os detalhes
-        console.log(tutor);
+        const response = await axios.get(`/Tutor/${item.id}`);
+        this.selectedTutor = response.data;
+        this.dialogDetails = true;
       } catch (error) {
         this.error = error.message;
       }
     },
-  },
+    async confirmarDelete(item) {
+      if (confirm(`Tem certeza que deseja excluir o tutor ${item.nome}?`)) {
+        try {
+          await axios.delete(`/Tutor/${item.id}`);
+          this.tutores = this.tutores.filter(t => t.id !== item.id);
+        } catch (error) {
+          this.error = error.message;
+        }
+      }
+    },
+  }
 };
 </script>
