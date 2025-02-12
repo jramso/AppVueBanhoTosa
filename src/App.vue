@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    <AgendamentoForm msg="UAU DOG - Banho e Tosa"/>
+    <ServicoConfig msg="UAU DOG - Banho e Tosa"/>
   </div>
 </template>
 
 <script>
-import AgendamentoForm from './components/AgendamentoForm.vue';
+import ServicoConfig from './components/ServicoConfig.vue';
 //import TutoresModel from './components/TutoresModel.vue'
 
 export default {
   name: 'App',
   components: {
-    AgendamentoForm
+    ServicoConfig
   }
 }
 </script>
