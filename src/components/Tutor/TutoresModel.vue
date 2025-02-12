@@ -128,7 +128,7 @@ export default {
   methods: {
     async initialize() {
       try {
-        const response = await axios.get('/Tutor');
+        const response = await axios.get('https://agendamentobanhoetosa-2.onrender.com/Tutor');
         this.tutores = response.data;
       } catch (error) {
         this.error = error.message;
@@ -150,7 +150,7 @@ export default {
     async save() {
       try {
         if (this.editedIndex > -1) {
-          await axios.put(`/Tutor/${this.editedItem.id}`, this.editedItem);
+          await axios.put(`https://agendamentobanhoetosa-2.onrender.com/Tutor/${this.editedItem.id}`, this.editedItem);
           Object.assign(this.tutores[this.editedIndex], this.editedItem);
         } else {
           const response = await axios.post('/Tutor', this.editedItem);
@@ -170,7 +170,7 @@ export default {
     async confirmarDelete(item) {
       if (confirm(`Tem certeza que deseja excluir o tutor ${item.nome}?`)) {
         try {
-          await axios.delete(`/Tutor/${item.id}`);
+          await axios.delete(`https://agendamentobanhoetosa-2.onrender.com/Tutor/${item.id}`);
           this.tutores = this.tutores.filter(t => t.id !== item.id);
         } catch (error) {
           this.error = error.message;
