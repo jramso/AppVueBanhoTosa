@@ -23,7 +23,7 @@
       <ul class="list-group">
         <li v-for="(servico, index) in servicos" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
           <div>
-            <strong>ID:</strong> {{ servico.id }} - {{ servico.nome }} - R$ {{ servico.preco }}
+            {{ servico.nome }} - R$ {{ servico.preco }}
           </div>
           <div>
             <button @click="prepararEdicao(servico)" class="btn btn-warning btn-sm me-2">Editar</button>
