@@ -33,7 +33,7 @@
               <div class="col-md-6">
                 <div class="form-group mb-3">
                   <label class="form-label fw-bold">Raça</label>
-                  <select v-model="animal.raca" class="form-control" required>
+                  <select v-model="racaSelecionada" class="form-control" required>
                     <option v-for="(raca, index) in racasDisponiveis" :key="index" :value="index">
                       {{ raca }}
                     </option>
@@ -70,7 +70,11 @@
         </div>
         <div class="card-body">
           <ul class="list-group">
-            <li v-for="animal in animais" :key="animal.id" class="list-group-item d-flex justify-content-between align-items-center">
+            <li
+              v-for="animal in animais"
+              :key="animal.id"
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
               {{ animal.nome }} ({{ animal.tipo === 0 ? "Gato" : "Cachorro" }})
               <div>
                 <button @click="carregarEdicao(animal)" class="btn btn-warning btn-sm me-2">✏ Editar</button>
@@ -96,7 +100,8 @@
           id: null,
           nome: '',
           tipo: 0,
-          raca: null,
+          racaGato: null,
+          racaCachorro: null,
           tutorId: null
         },
         editando: false,
@@ -107,6 +112,21 @@
     computed: {
       racasDisponiveis() {
         return this.animal.tipo === 0 ? this.racasGato : this.racasCachorro;
+      },
+  
+      racaSelecionada: {
+        get() {
+          return this.animal.tipo === 0 ? this.animal.racaGato : this.animal.racaCachorro;
+        },
+        set(valor) {
+          if (this.animal.tipo === 0) {
+            this.animal.racaGato = valor;
+            this.animal.racaCachorro = null;
+          } else {
+            this.animal.racaCachorro = valor;
+            this.animal.racaGato = null;
+          }
+        }
       }
     },
     methods: {
@@ -121,7 +141,14 @@
   
       async cadastrarAnimal() {
         try {
-          await AnimalController.cadastrarAnimal(this.animal);
+          const novoAnimal = {
+            nome: this.animal.nome,
+            tipo: this.animal.tipo,
+            racaGato: this.animal.tipo === 0 ? this.animal.racaGato : null,
+            racaCachorro: this.animal.tipo === 1 ? this.animal.racaCachorro : null,
+            tutorId: this.animal.tutorId
+          };
+          await AnimalController.cadastrarAnimal(novoAnimal);
           alert('Animal cadastrado com sucesso!');
           this.limparFormulario();
           this.listarAnimais();
@@ -140,13 +167,24 @@
       },
   
       carregarEdicao(animal) {
-        this.animal = { ...animal };
+        this.animal = {
+          ...animal,
+          racaGato: animal.tipo === 0 ? animal.racaGato : null,
+          racaCachorro: animal.tipo === 1 ? animal.racaCachorro : null
+        };
         this.editando = true;
       },
   
       async atualizarAnimal() {
         try {
-          await AnimalController.atualizarAnimal(this.animal.id, this.animal);
+          const animalAtualizado = {
+            nome: this.animal.nome,
+            tipo: this.animal.tipo,
+            racaGato: this.animal.tipo === 0 ? this.animal.racaGato : null,
+            racaCachorro: this.animal.tipo === 1 ? this.animal.racaCachorro : null,
+            tutorId: this.animal.tutorId
+          };
+          await AnimalController.atualizarAnimal(this.animal.id, animalAtualizado);
           alert('Animal atualizado com sucesso!');
           this.limparFormulario();
           this.listarAnimais();
@@ -170,7 +208,7 @@
       },
   
       limparFormulario() {
-        this.animal = { id: null, nome: '', tipo: 0, raca: null, tutorId: null };
+        this.animal = { id: null, nome: '', tipo: 0, racaGato: null, racaCachorro: null, tutorId: null };
         this.editando = false;
       }
     },
@@ -180,26 +218,4 @@
     }
   };
   </script>
-  
-  <style scoped>
-  .container {
-    max-width: 600px;
-  }
-  .card {
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .form-group {
-    margin-bottom: 15px;
-  }
-  button {
-    padding: 8px 12px;
-    cursor: pointer;
-  }
-  .list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  </style>
   
